@@ -10,10 +10,12 @@
         .main-content { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
         .monitor-card { background: #2c2c2c; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; transition: transform 0.2s ease; /* 滑鼠移上去的動畫 */ }
         .monitor-card:hover { transform: translateY(-2px); border-color: #e870d0; /* 懸停時邊框變色 */}
-        .guild-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 1.5px; /* 增加字距讓文字看起來更高檔 */text-transform: uppercase; /* 若有英文則轉大寫 *//* 漸層文字效果 */background: linear-gradient(45deg, #e870d0, #ff9cdb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;/* 文字發光感 */filter: drop-shadow(0 0 5px rgba(232, 112, 208, 0.4)); display: flex; align-items: center; }
+        .guild-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 1.5px; /* 增加字距讓文字看起來更高檔 *//* 漸層文字效果 */background: linear-gradient(45deg, #e870d0, #ff9cdb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;/* 文字發光感 */filter: drop-shadow(0 0 5px rgba(232, 112, 208, 0.4)); display: flex; align-items: center; }
         /* 可以在文字前加個小圖標裝飾 */
         .guild-title::before { content: "✦"; margin-right: 8px; font-size: 0.8rem; color: #e870d0; }
         .val { font-size: 2.2rem; font-weight: bold; color: #40c057; text-align: center; }
+        #img-container { position: relative; display: inline-block; }
+        #main-img { max-width: 100%; max-height: 15vh; display: block; }
         #video-container { position: relative; display: inline-block; }
         #main-video { max-width: 100%; max-height: 85vh; display: block; }
         .roi-box { position: absolute; border: 2px solid #fff; box-sizing: border-box; cursor: move; min-width: 30px; min-height: 20px; z-index: 1000; }
@@ -27,7 +29,7 @@
         .btn-manual { background: #fa5252; }
         .btn-reset { background: #495057; }
         .btn-save { background: #fab005; color: #000; }
-        .log { background: #000; color: #51cf66; font-family: monospace; font-size: 11px; padding: 10px; flex: 1; overflow-y: auto; border: 1px solid #333; margin-top: 2px; }
+        .log { background: #000; color: #51cf66; font-family: monospace; font-size: 11px; padding: 10px; flex: 1; min-height: 4rem; overflow-y: auto; border: 1px solid #333; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -40,7 +42,7 @@
     <div class="monitor-card">
         <div style="font-size: 0.8rem; color: #aaa;">血量偵測 (HP %)</div>
         <div id="hp-display" class="val">-- %</div>
-        <div id="hp-dev-msg" style="color: #ffd43b; font-weight: bold; text-align: center; min-height: 6rem; font-size: 0.9rem;"></div>
+        <div id="hp-dev-msg" style="color: #ffd43b; font-weight: bold; text-align: left; min-height: 15rem; font-size: 0.9rem;"></div>
         <input type="range" min="0" max="100" value="100" style="width:100%" oninput="manualHPAdjust(this.value)">
     </div>
 
@@ -75,6 +77,9 @@
 </div>
 
 <div class="main-content">
+    <div id="img-container">
+        <img id="main-img" src="./安全點位置.png">
+    </div>
     <div id="video-container">
         <video id="main-video" autoplay muted></video>
         <div id="hp-roi" class="roi-box" data-label="血量白字區"><div class="resizer"></div></div>
@@ -107,18 +112,46 @@
         const p = parseInt(percent);
 
         // 在這裡撰寫您的判斷條件
-        if (p <= 20) {
-            msgEl.innerText = "20%：紅鬧鐘狂暴化\n不再有藍鬧鐘（1/1），改為連續 6 次紅鬧鐘炸裂。走位失誤即死。";
-        } else if (p <= 50) {
-            msgEl.innerText = "50%：紅鬧鐘出現\n停止拍地板。血魔歸一變連續釋放，並穿插紅鬧鐘（1-2 秒炸開，站上面直接死亡）。";
+        if (p <= 19) {
+            msgEl.innerText = "HP <= 19%";
+            msgEl.innerText += "\n時鐘：-60分/10s";
+            msgEl.innerText += "\n會有 雷射、炸彈、反盾、黑水、紅鬧鐘\n";
+            msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
+            msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
+            msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
+            msgEl.innerText += "\n紅鬧鐘：請站在安全點, 連續召喚 7 個紅鬧鐘攻擊";
+        } else if (p <= 49) {
+            msgEl.innerText = "HP <= 49%";
+            msgEl.innerText += "\n時鐘：-50分/10s";
+            msgEl.innerText += "\n會有 藍鬧鐘、雷射、炸彈、反盾、黑水、紅鬧鐘\n";
+            msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
+            msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
+            msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
+            msgEl.innerText += "\n紅鬧鐘：請站在安全點, 固定紅藍紅順序攻擊";
         } else if (p <= 70) {
-            msgEl.innerText = "70%：分身召喚、黑水\n分身：全場僅一次，會施放黑暗、封印、鎖水、消技。必須最優先擊殺。\n黑水：踩到直接秒殺。每 70-80 秒放一次。";
-        } else if (p <= 83) {
-            msgEl.innerText = "83%：黑球";
+            msgEl.innerText = "HP <= 70%";
+            msgEl.innerText += "\n時鐘：-40分/10s";
+            msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射、炸彈、反盾、黑水、分身召喚\n";
+            msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
+            msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
+            msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
+            msgEl.innerText += "\n黑水：施放間隔 70s";
+            msgEl.innerText += "\n分身召喚(一次)：優先處理，30s 施放一次技能";
+        } else if (p <= 84) {
+            msgEl.innerText = "HP <= 84%";
+            msgEl.innerText += "\n時鐘：-30分/10s";
+            msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射、炸彈、反盾\n";
+            msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
+            msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
+            msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
         } else if (p <= 90) {
-            msgEl.innerText = "90%：時鐘啟動、雷射、炸彈\n雷射： 紅色(暈眩)、藍色(禁跳)。\n被標記玩家幾秒後爆炸，本人不死，但炸死周圍隊友。";
+            msgEl.innerText = "HP <= 90%";
+            msgEl.innerText += "\n時鐘：-20分/10s";
+            msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射\n";
+            msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
         } else if (p <= 100) {
-            msgEl.innerText = "100%：拍地板、血魔歸一";
+            msgEl.innerText = "HP <= 100%";
+            msgEl.innerText += "\n會有 拍地板、藍鬧鐘";
         } else {
             return;
             // msgEl.innerText = ""; // 高於設定趴數則不顯示
