@@ -8,7 +8,11 @@
         body { font-family: sans-serif; background: #121212; color: #eee; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 360px; background: #1e1e1e; border-right: 1px solid #333; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; }
         .main-content { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
-        .monitor-card { background: #2c2c2c; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; }
+        .monitor-card { background: #2c2c2c; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; transition: transform 0.2s ease; /* 滑鼠移上去的動畫 */ }
+        .monitor-card:hover { transform: translateY(-2px); border-color: #e870d0; /* 懸停時邊框變色 */}
+        .guild-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 1.5px; /* 增加字距讓文字看起來更高檔 */text-transform: uppercase; /* 若有英文則轉大寫 *//* 漸層文字效果 */background: linear-gradient(45deg, #e870d0, #ff9cdb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;/* 文字發光感 */filter: drop-shadow(0 0 5px rgba(232, 112, 208, 0.4)); display: flex; align-items: center; }
+        /* 可以在文字前加個小圖標裝飾 */
+        .guild-title::before { content: "✦"; margin-right: 8px; font-size: 0.8rem; color: #e870d0; }
         .val { font-size: 2.2rem; font-weight: bold; color: #40c057; text-align: center; }
         #video-container { position: relative; display: inline-block; }
         #main-video { max-width: 100%; max-height: 85vh; display: block; }
@@ -23,40 +27,50 @@
         .btn-manual { background: #fa5252; }
         .btn-reset { background: #495057; }
         .btn-save { background: #fab005; color: #000; }
-        .log { background: #000; color: #51cf66; font-family: monospace; font-size: 11px; padding: 10px; flex: 1; overflow-y: auto; border: 1px solid #333; margin-top: 10px; }
+        .log { background: #000; color: #51cf66; font-family: monospace; font-size: 11px; padding: 10px; flex: 1; overflow-y: auto; border: 1px solid #333; margin-top: 2px; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="monitor-card">
-        <div style="font-size: 0.8rem; color: #aaa;">HP % (OCR 偵測中)</div>
+        <div class="guild-title">aespaaa 公會製作</div>
+    </div>
+
+    <div class="monitor-card">
+        <div style="font-size: 0.8rem; color: #aaa;">血量偵測 (HP %)</div>
         <div id="hp-display" class="val">-- %</div>
-        <div id="hp-dev-msg" style="color: #ffd43b; font-weight: bold; text-align: center; min-height: 1.2em; font-size: 0.9rem;"></div>
+        <div id="hp-dev-msg" style="color: #ffd43b; font-weight: bold; text-align: center; min-height: 6rem; font-size: 0.9rem;"></div>
         <input type="range" min="0" max="100" value="100" style="width:100%" oninput="manualHPAdjust(this.value)">
     </div>
 
     <div class="monitor-card">
-        <div style="font-size: 0.8rem; color: #aaa;">黑水倒數 (Watch your step)</div>
+        <div style="font-size: 0.8rem; color: #aaa;">黑水倒數計時器</div>
         <div id="crack-timer" class="val">READY</div>
-        <div style="display: flex; gap: 5px;">
-            <select id="crack-duration" style="background:#444; color:white; border:none; padding:5px; flex: 1;">
-                <option value="65">65s</option><option value="70" selected>70s</option>
-                <option value="75">75s</option><option value="80">80s</option>
+        <div style="display: flex; gap: 5px; align-items: center;">
+            <select id="crack-duration" style="background:#444; color:white; border:none; flex: 1; height: 2rem;">
+                <option value="60">60s</option>
+                <option value="65">65s</option>
+                <option value="70" selected>70s</option>
+                <option value="75">75s</option>
+                <option value="80">80s</option>
             </select>
-            <button class="btn-reset" style="flex: 1;" onclick="resetCrackTimer()">重置</button>
+            <button class="btn-reset" style="flex: 1;" onclick="resetCrackTimer()">重置計時</button>
         </div>
         <button class="btn-manual" onclick="triggerCrack('手動', true)">手動 / 立即重置計時</button>
-        <div id="ocr-crack-raw" style="font-size: 10px; color: #ffd43b; text-align: center; margin-top:5px;">偵測內容：等待中...</div>
+        <div id="ocr-crack-raw" style="font-size: 10px; color: #ffd43b; min-height: 3rem; text-align: center; margin-top:5px;">偵測內容：等待中...</div>
     </div>
 
-    <button class="btn-primary" onclick="initCapture()">1. 連結遊戲畫面</button>
-    <button class="btn-save" onclick="saveSettings()">💾 儲存框位設定</button>
+    <button class="btn-primary" onclick="initCapture()">連結 遊戲畫面</button>
+    <button class="btn-save" onclick="saveSettings()">💾 儲存 偵測框 位置設定</button>
 
     <div style="margin-top:10px;">
+        <div style="font-size: 0.8rem; color: #aaa;">血量 偵測框 預覽</div>
         <canvas id="hp-debug" class="debug-canvas"></canvas>
+        <div style="font-size: 0.8rem; color: #aaa;">黑水 偵測框 預覽</div>
         <canvas id="crack-debug" class="debug-canvas"></canvas>
     </div>
+    <div style="font-size: 0.8rem; color: #aaa;">紀錄日誌</div>
     <div class="log" id="sys-log">系統：準備就緒。</div>
 </div>
 
