@@ -276,7 +276,13 @@
             system: { timeLeft: 10, interval: null, running: false, lastClick: 0 }
         };
 
+        let voiceUnlocked = false;
+
         function handleTimer(id) {
+            if (!voiceUnlocked) {
+                unlockVoice();
+            }
+            
             const now = Date.now();
             const timer = timers[id];
             const inputVal = parseFloat(document.getElementById(`input-${id}`).value) || 10;
@@ -293,6 +299,18 @@
             } else {
                 startTimer(id);
             }
+        }
+
+        function unlockVoice() {
+            if (!('speechSynthesis' in window)) return;
+            
+            // 播放一個極短且無聲的字串來騙過 Safari 的安全機制
+            const silentUtterance = new SpeechSynthesisUtterance('');
+            silentUtterance.volume = 0;
+            window.speechSynthesis.speak(silentUtterance);
+            
+            voiceUnlocked = true;
+            console.log("Voice Unlocked for Safari");
         }
 
         function startTimer(id) {
@@ -381,7 +399,7 @@
             utterance.pitch = 1;
             utterance.rate = 1.2; // 稍微加快語速，適合戰鬥提醒
             utterance.volume = 1;
-            window.speechSynthesis.speak(utterance);
+            setTimeout(() => {window.speechSynthesis.speak(utterance);}, 0);
         }
     </script>
 </body>
