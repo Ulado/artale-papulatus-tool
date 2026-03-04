@@ -10,30 +10,51 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #121212; color: #eee; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 360px; background: #1e1e1e; border-right: 1px solid #333; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; }
-        .main-content { flex: 1; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 10px; }
-        .safe-spot-header { width: 95%; background: rgba(148, 232, 112, 0.15); border-left: 4px solid #92e870; padding: 8px 15px; margin-bottom: 5px; font-weight: bold; color: #aeff9c; letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; }
-        .safe-spot-header-2 { width: 95%; background: rgba(112, 138, 232, 0.15); border-left: 4px solid #7080e8; padding: 8px 15px; margin-bottom: 5px; font-weight: bold; color: #9ca8ff; letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between; }
-        #img-container { width: 95%; display: flex; justify-content: center; margin-bottom: 15px; border: 1px solid #333; border-radius: 4px; background: #1a1a1a; overflow: hidden; }
-        #main-img { max-width: 100%; max-height: 20vh; object-fit: contain; display: block; }
-        .monitor-card { background: #2c2c2c; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; transition: transform 0.2s ease; }
-        .monitor-card:hover { transform: translateY(-2px); border-color: #e870d0; }
-        .guild-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 1.5px; background: linear-gradient(45deg, #e870d0, #ff9cdb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 5px rgba(232, 112, 208, 0.4)); display: flex; align-items: center; }
-        .guild-title::before { content: "✦"; margin-right: 8px; font-size: 0.8rem; color: #e870d0; }
+        .sidebar { width: 360px; min-width: 360px; flex-shrink: 0; background: #1e1e1e; border-right: 1px solid #333; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; z-index: 3000; }
+
+        .monitor-card { background: #2c2c2c; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444; transition: all 0.2s ease; }
+        .monitor-card:hover { transform: translateY(-2px); border-color: #e870d0; box-shadow: 0 4px 12px rgba(232, 112, 208, 0.2); }
+
+        .main-content { flex: 1; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px; overflow-x: hidden; overflow-y: auto; }
+
+        .safe-spot-header, .safe-spot-header-2 { width: 100%; max-width: 1000px; padding: 8px 15px; margin-bottom: 5px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; border-left: 4px solid; }
+        .safe-spot-header { background: rgba(148, 232, 112, 0.15); border-color: #92e870; color: #aeff9c; }
+        .safe-spot-header-2 { background: rgba(112, 138, 232, 0.15); border-color: #7080e8; color: #9ca8ff; }
+
+        .rgb-setting { font-size: 0.8rem; color: #ccc; display: flex; gap: 6px; align-items: center; margin-top: 5px; }
+        .rgb-input { width: 45px; background: #333; color: #fff; border: 1px solid #555; padding: 3px; border-radius: 3px; text-align: center; font-size: 0.85rem; }
+
+        #img-container { width: 100%; max-width: 1000px; display: flex; height: 20vh; margin-bottom: 15px; border: 1px solid #333; border-radius: 4px; background: #1a1a1a; box-sizing: border-box; }
+        .img-panel { flex: 1; display: flex; align-items: center; justify-content: center; border-right: 1px solid #333; overflow: hidden; }
+        #main-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .map-panel { flex: 1; position: relative; background: #000; overflow: hidden; }
+        #map-preview { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 10; object-fit: fill; } /* 修正：使用 fill 確保座標不因比例產生黑邊位移 */
+        #map-overlay { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 20; pointer-events: none; }
+
+        .status-label { padding: 4px 15px; border-radius: 4px; font-size: 1rem; font-weight: 800; color: #fff; background: #444; min-width: 80px; text-align: center; }
+        .status-safe { background: #40c057 !important; color: #000 !important; box-shadow: 0 0 10px rgba(64, 192, 87, 0.5); }
+
         .val { font-size: 2.2rem; font-weight: bold; color: #40c057; text-align: center; }
-        #video-container { position: relative; display: inline-block; /* 移除固定的 width: 95%，讓容器貼合影片 */ }
-        #main-video { max-width: 100%; max-height: 65vh; display: block; background: #000; }
-        .roi-box { position: absolute; border: 2px solid #fff; box-sizing: border-box; cursor: move; min-width: 30px; min-height: 20px; z-index: 1000; }
+        #video-container { position: relative; display: inline-block; background: #000; max-width: 100%; }
+        #main-video { max-width: 100%; max-height: 60vh; display: block; }
+
+        .roi-box { position: absolute; border: 2px solid #fff; box-sizing: border-box; z-index: 1000; pointer-events: auto; }
         .roi-box::after { content: attr(data-label); position: absolute; top: -22px; left: 0; background: rgba(0,0,0,0.8); font-size: 11px; padding: 2px 6px; white-space: nowrap; border-radius: 3px; }
-        .resizer { width: 14px; height: 14px; background: white; position: absolute; right: -7px; bottom: -7px; cursor: nwse-resize; border-radius: 50%; border: 2px solid #000; z-index: 1001; }
+        .resizer { width: 16px; height: 16px; background: white; position: absolute; right: -8px; bottom: -8px; cursor: nwse-resize; border-radius: 50%; border: 2px solid #000; z-index: 1001; pointer-events: auto; }
+
         #hp-roi { border-color: #4dabf7; background: rgba(77, 171, 247, 0.2); }
         #crack-roi { border-color: #ffd43b; background: rgba(255, 212, 59, 0.2); }
-        .debug-canvas { width: 100%; height: 45px; background: #000; border: 1px solid #555; margin-top: 5px; }
-        button { background: #343a40; color: white; border: none; padding: 10px; margin: 4px 0; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; }
+        #map-roi { border-color: #fab005; background: rgba(250, 176, 5, 0.2); }
+
+        .marker-line { position: absolute; border-left: 2px dashed #ff4444; z-index: 25; cursor: move; width: 15px; height: 100%; top: 0; pointer-events: auto; }
+        .marker-line.active { border-left: 2px solid #40c057; filter: drop-shadow(0 0 5px #40c057); }
+
+        button { background: #343a40; color: white; border: none; padding: 10px; margin: 4px 0; cursor: pointer; border-radius: 4px; font-weight: bold; width: 100%; transition: background 0.2s; }
         .btn-primary { background: #228be6; }
-        .btn-manual { background: #fa5252; }
-        .btn-reset { background: #495057; }
         .btn-save { background: #fab005; color: #000; }
+        .btn-clear { background: #fa5252; color: #fff; }
+        .debug-canvas { width: 100%; height: 45px; background: #000; border: 1px solid #555; margin-top: 5px; display: block; }
         .log { background: #000; color: #51cf66; font-family: monospace; font-size: 11px; padding: 10px; flex: 1; min-height: 4rem; overflow-y: auto; border: 1px solid #333; margin-top: 2px; }
     </style>
 </head>
@@ -41,7 +62,7 @@
 
 <div class="sidebar">
     <div class="monitor-card">
-        <div class="guild-title">aespaaa 公會製作</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: #e870d0;">✦ aespaaa 公會製作</div>
     </div>
     <div class="monitor-card">
         <div style="font-size: 0.8rem; color: #aaa;">血量偵測 (HP %)</div>
@@ -50,44 +71,64 @@
         <input type="range" min="0" max="100" value="100" style="width:100%" oninput="manualHPAdjust(this.value)">
     </div>
     <div class="monitor-card">
-        <div style="font-size: 0.8rem; color: #aaa;">黑水倒數計時器</div>
+        <div style="font-size: 0.8rem; color: #aaa;">黑水倒數</div>
         <div id="crack-timer" class="val">READY</div>
-        <div style="display: flex; gap: 5px; align-items: center;">
-            <select id="crack-duration" style="background:#444; color:white; border:none; flex: 1; height: 2rem;">
-                <option value="60">60s</option><option value="65">65s</option>
-                <option value="70" selected>70s</option><option value="75">75s</option><option value="80">80s</option>
+        <div style="display: flex; gap: 5px;">
+            <select id="crack-duration" style="background:#444; color:white; border:none; flex: 1; padding: 5px;">
+                <option value="60">60s</option><option value="70" selected>70s</option><option value="80">80s</option>
             </select>
-            <button class="btn-reset" style="flex: 1;" onclick="resetCrackTimer()">重置計時</button>
+            <button style="flex: 1; padding: 5px; margin: 0;" onclick="resetCrackTimer()">重置</button>
         </div>
-        <button class="btn-manual" onclick="triggerCrack('手動', true)">手動 / 立即重置計時</button>
-        <div id="ocr-crack-raw" style="font-size: 10px; color: #ffd43b; min-height: 3rem; text-align: center; margin-top:5px;">偵測內容：等待中...</div>
+        <button onclick="triggerCrack('手動', true)" style="background: #fa5252; margin-top: 8px;">手動觸發</button>
+        <div id="ocr-crack-raw" style="font-size: 10px; color: #ffd43b; text-align: center; margin-top:5px;">偵測內容：等待中...</div>
     </div>
-    <button class="btn-primary" onclick="initCapture()">連結 遊戲畫面</button>
-    <button class="btn-save" onclick="saveSettings()">💾 儲存 偵測框 位置設定</button>
-    <div style="margin-top:10px;">
-        <div style="font-size: 0.8rem; color: #aaa;">血量 偵測框 預覽</div>
+    <button class="btn-primary" onclick="initCapture()">連結遊戲畫面</button>
+    <button class="btn-save" onclick="saveSettings()">💾 儲存偵測框位置與角色圖示 RGB 設定</button>
+    <button class="btn-clear" onclick="clearSettings()">🔄 重置所有設定</button>
+
+    <div style="margin-top:15px;">
+        <div style="font-size: 0.75rem; color: #888;">血量區預覽</div>
         <canvas id="hp-debug" class="debug-canvas"></canvas>
-        <div style="font-size: 0.8rem; color: #aaa;">黑水 偵測框 預覽</div>
+        <div style="font-size: 0.75rem; color: #888; margin-top: 8px;">對話區預覽</div>
         <canvas id="crack-debug" class="debug-canvas"></canvas>
     </div>
+    <div style="font-size: 0.75rem; color: #888; margin-top: 15px;">紀錄日誌</div>
     <div class="log" id="sys-log">系統：準備就緒。</div>
 </div>
 
 <div class="main-content">
     <div class="safe-spot-header">
-        <span>安全點位置參考圖</span>
-        <span style="font-size: 0.7rem; opacity: 0.7;">(HP 49% 以下適用)</span>
+        <div style="flex: 1;">安全點參考圖</div>
+        <div style="flex: 1; display: flex; flex-direction: column; padding-left: 15px; border-left: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                小地圖預覽 <span id="safe-label" class="status-label">DANGER</span>
+            </div>
+            <div class="rgb-setting">
+                玩家顏色判斷設定:
+                R <input type="number" id="target-r" class="rgb-input">
+                G <input type="number" id="target-g" class="rgb-input">
+                B <input type="number" id="target-b" class="rgb-input">
+                誤差± <input type="number" id="target-tol" class="rgb-input">
+            </div>
+        </div>
     </div>
     <div id="img-container">
-        <img id="main-img" src="./安全點位置.png" alt="安全點位置圖請確認路徑正確">
+        <div class="img-panel"><img id="main-img" src="https://andynavy23.github.io/artale-papulatus-tool/安全點位置.png"></div>
+        <div class="map-panel" id="map-panel">
+            <canvas id="map-preview"></canvas>
+            <canvas id="map-overlay"></canvas>
+            <div id="line-1" class="marker-line" style="left: 10%;"></div>
+            <div id="line-2" class="marker-line" style="left: 30%;"></div>
+            <div id="line-3" class="marker-line" style="left: 70%;"></div>
+            <div id="line-4" class="marker-line" style="left: 90%;"></div>
+        </div>
     </div>
-    <div class="safe-spot-header-2">
-        <span>遊戲畫面</span>
-    </div>
+    <div class="safe-spot-header-2"><span>即時監控畫面</span></div>
     <div id="video-container">
         <video id="main-video" autoplay muted></video>
-        <div id="hp-roi" class="roi-box" data-label="血量白字區"><div class="resizer"></div></div>
-        <div id="crack-roi" class="roi-box" data-label="對話框偵測區"><div class="resizer"></div></div>
+        <div id="hp-roi" class="roi-box" data-label="血量偵測框"><div class="resizer"></div></div>
+        <div id="crack-roi" class="roi-box" data-label="對話偵測框"><div class="resizer"></div></div>
+        <div id="map-roi" class="roi-box" data-label="小地圖偵測框"><div class="resizer"></div></div>
     </div>
 </div>
 
@@ -95,25 +136,144 @@
     const video = document.getElementById('main-video');
     const hpDbg = document.getElementById('hp-debug');
     const crackDbg = document.getElementById('crack-debug');
+    const mapPreview = document.getElementById('map-preview');
+    const mapOverlay = document.getElementById('map-overlay');
     const hpCtx = hpDbg.getContext('2d', {willReadFrequently: true});
     const crackCtx = crackDbg.getContext('2d', {willReadFrequently: true});
+    const mapCtx = mapPreview.getContext('2d', {willReadFrequently: true});
+    const overlayCtx = mapOverlay.getContext('2d');
 
-    let config = JSON.parse(localStorage.getItem('artale_v7_config')) || {
-        hp: { top: 50, left: 100, width: 120, height: 35 },
-        crack: { top: 400, left: 200, width: 250, height: 60 }
+    const DEFAULT_CONFIG = {
+        hp: { top: 40, left: 100, width: 120, height: 35 },
+        crack: { top: 350, left: 200, width: 250, height: 60 },
+        map: { top: 10, left: 10, width: 100, height: 100 },
+        lines: [10, 30, 70, 90],
+        rgb: { r: 225, g: 240, b: 117, tol: 6 }
     };
 
-    let hpWorker = null, crackWorker = null;
-    let isHpBusy = false, isCrackBusy = false;
-    let lastCrackTrigger = 0, crackItv, isManualHP = false;
+    let config = JSON.parse(localStorage.getItem('artale_v8_config')) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    let hpWorker = null, crackWorker = null, isHpBusy = false, isCrackBusy = false, lastCrackTrigger = 0, crackItv, isManualHP = false;
 
-    // --- [邏輯保留] ---
-    function checkHPLogic(percent) {
+    // 拖曳邏輯保持穩定
+    function setupDraggable(id, isLine = false) {
+        const el = document.getElementById(id);
+        const panel = document.getElementById('map-panel');
+        let dragType = null, sx, sy, sw, sh, sl, st;
+
+        const handleDown = (e) => {
+            dragType = e.target.classList.contains('resizer') ? 'resize' : 'move';
+            sx = e.clientX; sy = e.clientY;
+            sw = el.offsetWidth; sh = el.offsetHeight;
+            sl = el.offsetLeft; st = el.offsetTop;
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', handleUp);
+            e.preventDefault(); e.stopPropagation();
+        };
+
+        const handleMove = (e) => {
+            if (!dragType) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (dragType === 'move') {
+                let nextL = sl + dx, nextT = st + dy;
+                if (isLine) {
+                    nextL = Math.max(0, Math.min(panel.offsetWidth - 5, nextL));
+                    el.style.left = ((nextL / panel.offsetWidth) * 100) + '%';
+                } else {
+                    el.style.left = nextL + 'px'; el.style.top = nextT + 'px';
+                }
+            } else {
+                el.style.width = Math.max(30, sw + dx) + 'px';
+                el.style.height = Math.max(20, sh + dy) + 'px';
+            }
+        };
+
+        const handleUp = () => { dragType = null; document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
+        el.addEventListener('mousedown', handleDown);
+    }
+
+    function captureROI(el, ctx, canvas) {
+        const vRect = video.getBoundingClientRect();
+        const rRect = el.getBoundingClientRect();
+        const relativeX = rRect.left - vRect.left;
+        const relativeY = rRect.top - vRect.top;
+        const scaleX = video.videoWidth / vRect.width;
+        const scaleY = video.videoHeight / vRect.height;
+        const w = rRect.width * scaleX;
+        const h = rRect.height * scaleY;
+        const x = relativeX * scaleX;
+        const y = relativeY * scaleY;
+        if (w < 1 || h < 1) return;
+        canvas.width = w; canvas.height = h;
+        ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
+    }
+
+    function analyzeLoop() {
+        if (video.paused || video.ended || video.videoWidth === 0) { requestAnimationFrame(analyzeLoop); return; }
+        if (!isHpBusy && hpWorker) { captureROI(document.getElementById('hp-roi'), hpCtx, hpDbg); processHpOCR(); }
+        if (!isCrackBusy && crackWorker) { captureROI(document.getElementById('crack-roi'), crackCtx, crackDbg); processCrackOCR(); }
+        const mROI = document.getElementById('map-roi');
+        if (mROI.offsetWidth > 0) {
+            captureROI(mROI, mapCtx, mapPreview);
+            if (mapOverlay.width !== mapPreview.width || mapOverlay.height !== mapPreview.height) {
+                mapOverlay.width = mapPreview.width; mapOverlay.height = mapPreview.height;
+            }
+            detectMap();
+        }
+        requestAnimationFrame(analyzeLoop);
+    }
+
+    // --- [修正：座標偏移 Debug 版] ---
+    function detectMap() {
+        const data = mapCtx.getImageData(0, 0, mapPreview.width, mapPreview.height).data;
+        let sumX = 0, sumY = 0, count = 0;
+        const tR = parseInt(document.getElementById('target-r').value) || 0;
+        const tG = parseInt(document.getElementById('target-g').value) || 0;
+        const tB = parseInt(document.getElementById('target-b').value) || 0;
+        const tol = parseInt(document.getElementById('target-tol').value) || 0;
+
+        for (let i = 0; i < data.length; i += 4) {
+            if (Math.abs(data[i] - tR) <= tol && Math.abs(data[i+1] - tG) <= tol && Math.abs(data[i+2] - tB) <= tol) {
+                sumX += (i / 4) % mapPreview.width;
+                sumY += Math.floor((i / 4) / mapPreview.width);
+                count++;
+            }
+        }
+
+        overlayCtx.clearRect(0, 0, mapOverlay.width, mapOverlay.height);
+        const lbl = document.getElementById('safe-label');
+
+        if (count > 0) {
+            const avgX = sumX / count;
+            const avgY = sumY / count;
+
+            // 十字準心 (Debug：畫在絕對像素座標上)
+            overlayCtx.strokeStyle = "#00ff00";
+            overlayCtx.lineWidth = 3;
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(avgX, 0); overlayCtx.lineTo(avgX, mapOverlay.height);
+            overlayCtx.moveTo(0, avgY); overlayCtx.lineTo(mapOverlay.width, avgY);
+            overlayCtx.stroke();
+
+            const px = (avgX / mapPreview.width) * 100;
+            let isTouching = false;
+            for(let i=1; i<=4; i++) {
+                const line = document.getElementById(`line-${i}`);
+                if (Math.abs(px - parseFloat(line.style.left)) <= 2.5) {
+                    isTouching = true; line.classList.add('active');
+                } else { line.classList.remove('active'); }
+            }
+            lbl.innerText = isTouching ? "SAFE" : "DANGER";
+            lbl.className = isTouching ? "status-label status-safe" : "status-label";
+        } else {
+            lbl.innerText = "UNKNOWN"; lbl.className = "status-label";
+            for(let i=1; i<=4; i++) document.getElementById(`line-${i}`).classList.remove('active');
+        }
+    }
+
+    function checkHPLogic(p) {
         const msgEl = document.getElementById('hp-dev-msg');
-        const p = parseInt(percent);
-        if (isNaN(p)) return;
-        // 在這裡撰寫您的判斷條件
-        if (p <= 19) {
+        const val = parseInt(p); if (isNaN(val)) return;
+        if (val <= 19) {
             msgEl.innerText = "HP <= 19%";
             msgEl.innerText += "\n時鐘：-60分/10s";
             msgEl.innerText += "\n會有 雷射、炸彈、反盾、黑水、紅鬧鐘\n";
@@ -121,7 +281,7 @@
             msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
             msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
             msgEl.innerText += "\n紅鬧鐘：請站在安全點, 連續召喚 7 個紅鬧鐘攻擊";
-        } else if (p <= 49) {
+        } else if (val <= 49) {
             msgEl.innerText = "HP <= 49%";
             msgEl.innerText += "\n時鐘：-50分/10s";
             msgEl.innerText += "\n會有 藍鬧鐘、雷射、炸彈、反盾、黑水、紅鬧鐘\n";
@@ -129,7 +289,7 @@
             msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
             msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
             msgEl.innerText += "\n紅鬧鐘：請站在安全點, 固定紅藍紅順序攻擊";
-        } else if (p <= 69) {
+        } else if (val <= 69) {
             msgEl.innerText = "HP <= 69%";
             msgEl.innerText += "\n時鐘：-40分/10s";
             msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射、炸彈、反盾、黑水、分身召喚\n";
@@ -138,19 +298,19 @@
             msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
             msgEl.innerText += "\n黑水：施放間隔 70s";
             msgEl.innerText += "\n分身召喚(一次)：優先處理，30s 施放一次技能";
-        } else if (p <= 84) {
+        } else if (val <= 84) {
             msgEl.innerText = "HP <= 84%";
             msgEl.innerText += "\n時鐘：-30分/10s";
             msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射、炸彈、反盾\n";
             msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
             msgEl.innerText += "\n炸彈：施放間隔 30s, 隨機標記玩家頭上出現炸彈, 本人不死，但炸死周圍隊友";
             msgEl.innerText += "\n反盾：會召喚黑球, 每顆沒清扣 10 分鐘";
-        } else if (p <= 89) {
+        } else if (val <= 89) {
             msgEl.innerText = "HP <= 89%";
             msgEl.innerText += "\n時鐘：-20分/10s";
             msgEl.innerText += "\n會有 拍地板、藍鬧鐘、雷射\n";
             msgEl.innerText += "\n雷射：紅色(暈眩)、藍色(禁跳)";
-        } else if (p <= 100) {
+        } else if (val <= 100) {
             msgEl.innerText = "HP <= 100%";
             msgEl.innerText += "\n會有 拍地板、藍鬧鐘";
         } else {
@@ -159,173 +319,46 @@
         }
     }
 
-    function checkCrackKeywords(rawText) {
-        const text = rawText.toLowerCase();
-        const keywords = ["watch", "step", "your", "注意你的", "你的腳下", "腳下"];
-        return keywords.some(key => text.includes(key));
-    }
-
-    // --- [修正拖曳與縮放的座標系統] ---
-    function setupDraggable(id) {
-        const el = document.getElementById(id);
-        let m = false, r = false, sx, sy, sw, sh, sl, st;
-        el.onmousedown = (e) => {
-            if (e.target.className === 'resizer') r = true; else m = true;
-            sx = e.clientX; sy = e.clientY;
-            sw = el.offsetWidth; sh = el.offsetHeight;
-            sl = el.offsetLeft; st = el.offsetTop;
-            e.stopPropagation();
-            e.preventDefault();
-        };
-        document.addEventListener('mousemove', (e) => {
-            if (m) { el.style.left = (sl + (e.clientX - sx)) + 'px'; el.style.top = (st + (e.clientY - sy)) + 'px'; }
-            else if (r) { el.style.width = Math.max(20, sw + (e.clientX - sx)) + 'px'; el.style.height = Math.max(10, sh + (e.clientY - sy)) + 'px'; }
-        });
-        document.addEventListener('mouseup', () => { m = false; r = false; });
-    }
-
     window.onload = async () => {
         applyUI();
-        setupDraggable('hp-roi'); setupDraggable('crack-roi');
-        try {
-            hpWorker = await Tesseract.createWorker('eng');
-            crackWorker = await Tesseract.createWorker('eng+chi_tra');
-            addLog("OCR 引擎載入完成。");
-        } catch (err) { addLog("OCR 載入失敗。"); }
+        setupDraggable('hp-roi'); setupDraggable('crack-roi'); setupDraggable('map-roi');
+        for(let i=1; i<=4; i++) setupDraggable(`line-${i}`, true);
+        hpWorker = await Tesseract.createWorker('eng');
+        crackWorker = await Tesseract.createWorker('eng+chi_tra');
+        addLog("系統：初始化完成。");
     };
 
-    async function initCapture() {
-        try {
-            video.srcObject = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-            analyzeLoop();
-        } catch (e) { addLog("連結取消。"); }
-    }
-
-    function analyzeLoop() {
-        if (video.paused || video.ended || video.videoWidth === 0) {
-            requestAnimationFrame(analyzeLoop); return;
-        }
-
-        // --- [核心修復：計算影像比例與偏移] ---
-        const rect = video.getBoundingClientRect();
-        const scaleX = video.videoWidth / rect.width;
-        const scaleY = video.videoHeight / rect.height;
-
-        if (!isHpBusy && hpWorker) {
-            captureROI(document.getElementById('hp-roi'), hpCtx, hpDbg, scaleX, scaleY);
-            processHpOCR();
-        }
-        if (!isCrackBusy && crackWorker) {
-            captureROI(document.getElementById('crack-roi'), crackCtx, crackDbg, scaleX, scaleY);
-            processCrackOCR();
-        }
-        requestAnimationFrame(analyzeLoop);
-    }
-
-    function captureROI(el, ctx, canvas, scaleX, scaleY) {
-        const w = el.offsetWidth * scaleX;
-        const h = el.offsetHeight * scaleY;
-        const x = el.offsetLeft * scaleX;
-        const y = el.offsetTop * scaleY;
-
-        if (w < 1 || h < 1) return;
-        canvas.width = w; canvas.height = h;
-        // 使用計算後的比例與坐標進行擷取
-        ctx.drawImage(video, x, y, w, h, 0, 0, w, h);
-    }
-
-    async function processHpOCR() {
-        isHpBusy = true;
-        try {
-            const { data: { text } } = await hpWorker.recognize(hpDbg);
-            const match = text.match(/(\d+)%/);
-            if (match && !isManualHP) updateHPUI(match[1]);
-        } catch (e) {}
-        isHpBusy = false;
-    }
-
-    async function processCrackOCR() {
-        isCrackBusy = true;
-        try {
-            const { data: { text } } = await crackWorker.recognize(crackDbg);
-            const raw = text.trim();
-            if (raw.length > 0) {
-                document.getElementById('ocr-crack-raw').innerText = "偵測內容：" + raw;
-                if (checkCrackKeywords(raw)) triggerCrack("自動偵測", false);
-            }
-        } catch (e) {}
-        isCrackBusy = false;
-    }
-
-    function triggerCrack(src, force) {
-        const now = Date.now();
-        if (!force && (now - lastCrackTrigger < 15000)) return;
-        lastCrackTrigger = now;
-        clearInterval(crackItv);
-        const dur = parseInt(document.getElementById('crack-duration').value);
-        let s = dur;
-        const el = document.getElementById('crack-timer');
-        el.style.color = "#fa5252";
-        addLog(`[${src}] 啟動 ${dur}s 倒數。`);
-        crackItv = setInterval(() => {
-            s--; el.innerText = s + "s";
-            if (s <= 0) {
-                clearInterval(crackItv); el.innerText = "READY"; el.style.color = "#40c057";
-                speak("注意黑水");
-            }
-        }, 1000);
-    }
-
-    function resetCrackTimer() {
-        clearInterval(crackItv);
-        document.getElementById('crack-timer').innerText = "READY";
-        document.getElementById('crack-timer').style.color = "#40c057";
-        addLog("倒數重置。");
-    }
-
-    function updateHPUI(p) {
-        document.getElementById('hp-display').innerText = p + "%";
-        checkHPLogic(p);
-    }
-
-    function manualHPAdjust(val) {
-        isManualHP = true; updateHPUI(val);
-        clearTimeout(window.hpTimer);
-        window.hpTimer = setTimeout(() => isManualHP = false, 5000);
-    }
+    async function initCapture() { try { video.srcObject = await navigator.mediaDevices.getDisplayMedia({ video: true }); analyzeLoop(); } catch (e) { addLog("系統：連結視窗取消。"); } }
+    async function processHpOCR() { isHpBusy = true; try { const { data: { text } } = await hpWorker.recognize(hpDbg); const m = text.match(/(\d+)%/); if (m && !isManualHP) updateHPUI(m[1]); } catch(e){} isHpBusy = false; }
+    async function processCrackOCR() { isCrackBusy = true; try { const { data: { text } } = await crackWorker.recognize(crackDbg); const r = text.trim(); if (r) { document.getElementById('ocr-crack-raw').innerText = r; if (["watch", "step", "腳下"].some(k => r.toLowerCase().includes(k))) triggerCrack("自動", false); } } catch(e){} isCrackBusy = false; }
+    function triggerCrack(src, f) { const now = Date.now(); if (!f && (now - lastCrackTrigger < 15000)) return; lastCrackTrigger = now; clearInterval(crackItv); let s = parseInt(document.getElementById('crack-duration').value); const el = document.getElementById('crack-timer'); el.style.color = "#fa5252"; crackItv = setInterval(() => { s--; el.innerText = s + "s"; if (s<=0) { clearInterval(crackItv); el.innerText = "READY"; el.style.color = "#40c057"; speak("注意黑水"); } }, 1000); }
+    function resetCrackTimer() { clearInterval(crackItv); document.getElementById('crack-timer').innerText = "READY"; document.getElementById('crack-timer').style.color = "#40c057"; }
+    function updateHPUI(p) { document.getElementById('hp-display').innerText = p + "%"; checkHPLogic(p); }
+    function manualHPAdjust(v) { isManualHP = true; updateHPUI(v); clearTimeout(window.hT); window.hT = setTimeout(() => isManualHP = false, 5000); }
 
     function applyUI() {
-        ['hp', 'crack'].forEach(k => {
+        if (!config.rgb) config.rgb = {...DEFAULT_CONFIG.rgb};
+        ['hp', 'crack', 'map'].forEach(k => {
             const el = document.getElementById(k + '-roi');
-            el.style.top = config[k].top + 'px'; el.style.left = config[k].left + 'px';
-            el.style.width = config[k].width + 'px'; el.style.height = config[k].height + 'px';
+            if (el) { el.style.top = config[k].top + 'px'; el.style.left = config[k].left + 'px'; el.style.width = config[k].width + 'px'; el.style.height = config[k].height + 'px'; }
         });
+        config.lines.forEach((v, i) => { const l = document.getElementById(`line-${i+1}`); if(l) l.style.left = v + '%'; });
+        document.getElementById('target-r').value = config.rgb.r;
+        document.getElementById('target-g').value = config.rgb.g;
+        document.getElementById('target-b').value = config.rgb.b;
+        document.getElementById('target-tol').value = config.rgb.tol;
     }
 
     function saveSettings() {
-        ['hp', 'crack'].forEach(k => {
-            const el = document.getElementById(k + '-roi');
-            config[k] = {
-                top: parseInt(el.style.top),
-                left: parseInt(el.style.left),
-                width: el.offsetWidth,
-                height: el.offsetHeight
-            };
-        });
-        localStorage.setItem('artale_v7_config', JSON.stringify(config));
-        addLog("座標儲存成功。");
+        ['hp', 'crack', 'map'].forEach(k => { const el = document.getElementById(k + '-roi'); config[k] = { top: parseInt(el.style.top), left: parseInt(el.style.left), width: el.offsetWidth, height: el.offsetHeight }; });
+        config.lines = []; for(let i=1; i<=4; i++) config.lines.push(parseFloat(document.getElementById(`line-${i}`).style.left));
+        config.rgb = { r: parseInt(document.getElementById('target-r').value), g: parseInt(document.getElementById('target-g').value), b: parseInt(document.getElementById('target-b').value), tol: parseInt(document.getElementById('target-tol').value) };
+        localStorage.setItem('artale_v8_config', JSON.stringify(config));
+        addLog("系統：設定已永久儲存。");
     }
-
-    function addLog(m) {
-        const l = document.getElementById('sys-log');
-        l.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${m}`;
-        l.scrollTop = l.scrollHeight;
-    }
-
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(t));
-    }
+    function clearSettings() { localStorage.removeItem('artale_v8_config'); config = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); applyUI(); addLog("系統：設定已恢復預設。"); }
+    function addLog(m) { const l = document.getElementById('sys-log'); l.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${m}`; l.scrollTop = l.scrollHeight; }
+    function speak(t) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(t)); }
 </script>
 </body>
 </html>
