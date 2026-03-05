@@ -280,7 +280,7 @@
       }
       .topbar .title{ font-size: 12px; }
       .topbar label{ font-size: 12px; }
-      .topbar .guild-tag{ display:none; } /* 手機先藏，省高度 */
+      .topbar .guild-tag{ font-size: 10px; opacity:.85; }
 
       /* 3) 卡片之間距離縮小（你覺得太寬的主因） */
       .timer-grid{
@@ -380,7 +380,7 @@
 
   <div class="timer-grid">
     <!-- mobs -->
-    <div class="timer-card accent-mobs" id="card-mobs">
+    <div class="timer-card accent-mobs" id="card-mobs" onclick="restartTimer('mobs')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>召喚小怪 (屋頂)</div>
         <div class="settings-area">
@@ -405,7 +405,7 @@
     </div>
 
     <!-- water -->
-    <div class="timer-card accent-water" id="card-water">
+    <div class="timer-card accent-water" id="card-water" onclick="restartTimer('water')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>黑水生成 (即死)</div>
         <div class="settings-area">
@@ -430,7 +430,7 @@
     </div>
 
     <!-- system -->
-    <div class="timer-card accent-system" id="card-system">
+    <div class="timer-card accent-system" id="card-system" onclick="restartTimer('system')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>系統扣時 (指針)</div>
         <div class="settings-area">
