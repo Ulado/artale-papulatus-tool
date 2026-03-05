@@ -88,7 +88,11 @@
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       position: relative;
     }
-
+    .timer-card { cursor: pointer; }
+    .timer-card input,
+    .timer-card button,
+    .timer-card label { cursor: auto; }
+    
     /* ✅ 每個區塊內改成「上下」：標題/設定在上，圈圈在下（窄螢幕也舒服） */
     .panel {
       width: min(30vw, 420px);
@@ -380,7 +384,7 @@
 
   <div class="timer-grid">
     <!-- mobs -->
-    <div class="timer-card accent-mobs" id="card-mobs" onclick="restartTimer('mobs')">
+    <div class="timer-card accent-mobs" id="card-mobs" onclick="cardClick(event,'mobs')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>召喚小怪 (屋頂)</div>
         <div class="settings-area">
@@ -405,7 +409,7 @@
     </div>
 
     <!-- water -->
-    <div class="timer-card accent-water" id="card-water" onclick="restartTimer('water')">
+    <div class="timer-card accent-water" id="card-water" onclick="cardClick(event,'water')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>黑水生成 (即死)</div>
         <div class="settings-area">
@@ -430,7 +434,7 @@
     </div>
 
     <!-- system -->
-    <div class="timer-card accent-system" id="card-system" onclick="restartTimer('system')">
+    <div class="timer-card accent-system" id="card-system" onclick="cardClick(event,'system')">
       <div class="panel">
         <div class="timer-title"><span class="dot"></span>系統扣時 (指針)</div>
         <div class="settings-area">
@@ -486,6 +490,14 @@
     updateRing(id);
     updateWarn(id);
   });
+
+  function cardClick(e, id) {
+    // 如果點到控制元件（輸入框、按鈕、checkbox、label），就不要重啟
+    if (e.target.closest('input, button, label')) return;
+
+    // 其他地方點到卡片 → 視同點圈圈
+    handleTimer(id);
+  }
 
   function handleTimer(id) {
     if (!voiceUnlocked) unlockVoice();
