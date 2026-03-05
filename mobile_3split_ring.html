@@ -92,7 +92,7 @@
     .timer-card input,
     .timer-card button,
     .timer-card label { cursor: auto; }
-    
+
     /* ✅ 每個區塊內改成「上下」：標題/設定在上，圈圈在下（窄螢幕也舒服） */
     .panel {
       width: min(30vw, 420px);
@@ -369,6 +369,11 @@
         opacity: .7;
       }
     }
+    /* 讓圈圈內部的 SVG 與數字不吃點擊，點擊會落在 ringWrap/timer-card 上 */
+    .ringWrap svg,
+    .ringWrap .timer-display {
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -397,7 +402,7 @@
           </label>
         </div>
 
-        <div class="ringWrap" onclick="handleTimer('mobs')">
+        <div class="ringWrap">
           <svg viewBox="0 0 120 120" aria-hidden="true">
             <circle class="ringBg" cx="60" cy="60" r="44"></circle>
             <circle class="ring" id="ring-mobs" cx="60" cy="60" r="44"></circle>
@@ -422,7 +427,7 @@
           </label>
         </div>
 
-        <div class="ringWrap" onclick="handleTimer('water')">
+        <div class="ringWrap">
           <svg viewBox="0 0 120 120" aria-hidden="true">
             <circle class="ringBg" cx="60" cy="60" r="44"></circle>
             <circle class="ring" id="ring-water" cx="60" cy="60" r="44"></circle>
@@ -447,7 +452,7 @@
           </label>
         </div>
 
-        <div class="ringWrap" onclick="handleTimer('system')">
+        <div class="ringWrap">
           <svg viewBox="0 0 120 120" aria-hidden="true">
             <circle class="ringBg" cx="60" cy="60" r="44"></circle>
             <circle class="ring" id="ring-system" cx="60" cy="60" r="44"></circle>
@@ -461,7 +466,7 @@
 
   <div class="footer-hint">
     💡 點圈圈：重新開始倒數｜<b>快速雙擊：重置到設定秒數</b><br>
-    ✅ 黑水 / 召喚小怪：進入 10 秒會獨立閃爍提醒
+    ✅ 黑水 / 召喚小怪：進入 15 / 10 秒會獨立閃爍提醒
   </div>
 
 <script>
@@ -492,10 +497,9 @@
   });
 
   function cardClick(e, id) {
-    // 如果點到控制元件（輸入框、按鈕、checkbox、label），就不要重啟
-    if (e.target.closest('input, button, label')) return;
-
-    // 其他地方點到卡片 → 視同點圈圈
+    const el = e.target;
+    // 點到控制元件就不要重啟
+    if (el && el.closest && el.closest('input, button, label')) return;
     handleTimer(id);
   }
 
