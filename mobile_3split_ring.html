@@ -264,12 +264,43 @@
     .accent-system { --accent: var(--color-system); }
 
     /* ✅ 超窄直向時自動改回上下避免擠爆 */
-    @media (max-width: 720px) and (orientation: portrait) {
-      body{ overflow:auto; }
-      .timer-grid{ flex-direction: column; }
-      .panel{ width: min(92vw, 520px); }
-      .timer-card{ min-height: 33dvh; }
-      .ringWrap{ width: clamp(170px, 48vw, 260px); }
+    @media (max-width: 600px){
+      body{
+        background:
+          radial-gradient(circle at top, #111827, #020617);
+      }
+      .timer-grid{
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        padding: 80px 16px 120px;
+      }
+      .timer-card{
+        border-radius: 28px;
+        padding: 32px 18px;
+        background: #0f172a;
+        
+        box-shadow:
+          0 0 0 1px rgba(255,255,255,0.05),
+          0 15px 40px rgba(0,0,0,0.6);
+      }
+      .panel{
+        width: 100%;
+        gap: 18px;
+      }
+      .ringWrap{
+        width: min(72vw, 260px);
+      }
+      .timer-display{
+        font-size: 52px;
+      }
+      .settings-area{
+        justify-content: center;
+        gap: 12px;
+      }
+      .hint{
+        opacity: .6;
+      }
     }
   </style>
 </head>
