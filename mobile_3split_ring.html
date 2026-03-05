@@ -10,7 +10,7 @@
 
     :root {
       --color-mobs: #4db34d;
-      --color-water: #4a90e2;
+      --color-water: #df381b;
       --color-system: #a362cc;
 
       --bg: #0b0f17;
@@ -219,14 +219,31 @@
 
     /* ✅ 10 秒警示閃爍（每卡獨立） */
     @keyframes warnBlink {
-      0%   { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); }
-      50%  { background: color-mix(in srgb, var(--accent) 20%, rgba(255,255,255,.02)); }
-      100% { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); }
-    }
-    .timer-card.warn {
-      animation: warnBlink .5s linear infinite;
+      0%{
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        box-shadow: 0 0 0 rgba(0,0,0,0);
+        filter: brightness(1);
+      }
+
+      50%{
+        background: color-mix(in srgb, var(--accent) 45%, rgba(255,255,255,.05));
+        box-shadow:
+          0 0 30px color-mix(in srgb, var(--accent) 60%, white),
+          inset 0 0 25px color-mix(in srgb, var(--accent) 40%, white);
+        filter: brightness(1.35);
+      }
+
+      100%{
+        background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+        box-shadow: 0 0 0 rgba(0,0,0,0);
+        filter: brightness(1);
+      }
     }
 
+    .timer-card.warn {
+      animation: warnBlink .45s linear infinite;
+    }
+    
     .footer-hint {
       position: fixed;
       left: 10px;
@@ -351,15 +368,20 @@
 
 <script>
   const timers = {
-    mobs: { timeLeft: 50, interval: null, running: false, lastClick: 0 },
-    water: { timeLeft: 70, interval: null, running: false, lastClick: 0 },
-    system: { timeLeft: 10, interval: null, running: false, lastClick: 0 }
+    mobs: { timeLeft: 50, interval: null, running: false, lastClick: 0, prepSpoken: false  },
+    water: { timeLeft: 70, interval: null, running: false, lastClick: 0, prepSpoken: false  },
+    system: { timeLeft: 10, interval: null, running: false, lastClick: 0, prepSpoken: false  }
   };
 
   let voiceUnlocked = false;
 
   const R = 44;
   const C = 2 * Math.PI * R;
+
+  const WARN_THRESHOLD = {
+    mobs: 10,
+    water: 15
+  };
 
   ["mobs","water","system"].forEach(id => {
     const ring = document.getElementById(`ring-${id}`);
@@ -416,9 +438,9 @@
 
       if (timer.timeLeft <= 0) {
         if (isVoiceEnabled) {
-          if (id === "mobs") speak("召喚小怪");
-          else if (id === "water") speak("黑水");
-          else if (id === "system") speak("系統扣時");
+          // if (id === "mobs") speak("召喚小怪");
+          // else if (id === "water") speak("黑水");
+          if (id === "system") speak("系統扣時");
         }
 
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -426,6 +448,7 @@
         if (autoRestart) {
           const inputVal = parseFloat(document.getElementById(`input-${id}`).value);
           timer.timeLeft = inputVal;
+          timer.prepSpoken = false;
         } else {
           timer.timeLeft = 0;
           pauseTimer(id);
@@ -459,6 +482,7 @@
     timer.interval = null;
     timer.running = false;
     timer.timeLeft = duration;
+    timer.prepSpoken = false;
 
     display.innerText = duration.toFixed(1);
     display.classList.remove('running-text');
@@ -502,17 +526,29 @@
     const card = document.getElementById(`card-${id}`);
     if (!card) return;
 
-    // 只有 mobs / water 要
-    if (id !== "mobs" && id !== "water") {
+    // mobs/water 才有警示
+    const threshold = WARN_THRESHOLD[id];
+    if (!threshold) {
       card.classList.remove("warn");
       return;
     }
 
     const timer = timers[id];
-    const isWarning = timer.running && timer.timeLeft > 0 && timer.timeLeft <= 10;
+    const isWarning = timer.running && timer.timeLeft > 0 && timer.timeLeft <= threshold;
 
-    if (isWarning) card.classList.add("warn");
-    else card.classList.remove("warn");
+    // 進入警示區間：加閃爍 + 說一次「準備」
+    if (isWarning) {
+      card.classList.add("warn");
+
+      const isVoiceEnabled = document.getElementById(`voice-${id}`).checked;
+      if (isVoiceEnabled && !timer.prepSpoken) {
+        if (id === "mobs") speak("召喚小怪準備");
+        if (id === "water") speak("黑水準備");
+        timer.prepSpoken = true;
+      }
+    } else {
+      card.classList.remove("warn");
+    }
   }
 </script>
 </body>
