@@ -263,43 +263,106 @@
     .accent-water { --accent: var(--color-water); }
     .accent-system { --accent: var(--color-system); }
 
-    /* ✅ 超窄直向時自動改回上下避免擠爆 */
-    @media (max-width: 600px){
-      body{
-        background:
-          radial-gradient(circle at top, #111827, #020617);
+    /* ✅ UIUX adjust */
+    /* ===== 手機直向：盡量一屏看三個 + 允許滑動 ===== */
+    @media (max-width: 520px) and (orientation: portrait) {
+
+      /* 1) 解除鎖死：允許滑動 */
+      body { overflow-y: auto; overflow-x: hidden; }
+      .timer-grid { height: auto; min-height: 100dvh; }
+
+      /* 2) Header 變薄，避免吃掉高度 */
+      .topbar{
+        top: 6px; left: 6px; right: 6px;
+        padding: 6px 10px;
+        border-radius: 12px;
+        gap: 8px;
       }
+      .topbar .title{ font-size: 12px; }
+      .topbar label{ font-size: 12px; }
+      .topbar .guild-tag{ display:none; } /* 手機先藏，省高度 */
+
+      /* 3) 卡片之間距離縮小（你覺得太寬的主因） */
       .timer-grid{
         display: flex;
         flex-direction: column;
-        gap: 50px;
-        padding: 80px 16px 120px;
+        gap: 12px;                 /* ✅ 原本太大，縮小 */
+        padding: 56px 10px 12px;   /* ✅ 上留 header 高度 */
       }
+
+      /* 4) 卡片變扁：padding變小 + 圓角維持 */
       .timer-card{
-        border-radius: 28px;
-        padding: 32px 18px;
-        background: #0f172a;
-        
+        padding: 10px 12px;
+        border-radius: 18px;
+        background: rgba(15,23,42,.75);
         box-shadow:
           0 0 0 1px rgba(255,255,255,0.05),
-          0 15px 40px rgba(0,0,0,0.6);
+          0 10px 28px rgba(0,0,0,0.45);
       }
+
+      /* 5) 內容排版更緊湊 */
       .panel{
         width: 100%;
-        gap: 18px;
+        gap: 8px;
       }
-      .ringWrap{
-        width: min(72vw, 260px);
+
+      .timer-title{
+        font-size: 16px;
+        margin: 0;
       }
-      .timer-display{
-        font-size: 52px;
-      }
+
+      /* 6) 控制列一排放下：input、重置、語音 */
       .settings-area{
-        justify-content: center;
-        gap: 12px;
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: nowrap; /* ✅ 不要換行擠爆高度 */
       }
+      .settings-area .input-row{
+        display:flex;
+        align-items:center;
+        gap: 6px;
+        width: auto;
+      }
+      .settings-area input[type="number"]{
+        width: 64px;
+        padding: 6px 8px;
+        font-size: 14px;
+      }
+      .reset-btn{
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+      .voice-switch{
+        padding: 6px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      /* 7) 圓圈縮小（讓三個更容易同屏） */
+      .ringWrap{
+        width: clamp(120px, 34vw, 150px); /* ✅ 變小很多 */
+        margin-top: 2px;
+      }
+
+      .timer-display{
+        font-size: clamp(26px, 8vw, 34px);
+      }
+
       .hint{
-        opacity: .6;
+        margin-top: 4px;
+        font-size: 10px;
+        opacity: .55;
+      }
+
+      /* 8) footer 不要固定（會擋第三個） */
+      .footer-hint{
+        position: static;
+        margin: 8px 10px 14px;
+        padding: 8px 10px;
+        font-size: 11px;
+        border-radius: 12px;
+        opacity: .7;
       }
     }
   </style>
