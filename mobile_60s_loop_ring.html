@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Artale 困難拉圖斯 - 60 秒循環倒數</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap');
+
+    :root {
+      --bg: #080d14;
+      --panel: rgba(255,255,255,.075);
+      --panel-strong: rgba(255,255,255,.12);
+      --text: #edf6ff;
+      --muted: rgba(237,246,255,.72);
+      --accent: #27c6a4;
+      --accent-hot: #ff5252;
+      --ring-bg: rgba(255,255,255,.13);
+    }
+
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at 50% 15%, rgba(39,198,164,.18), transparent 34%),
+        linear-gradient(180deg, #101923 0%, var(--bg) 62%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .app {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 12px;
+      gap: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .title {
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-pill {
+      flex: 0 0 auto;
+      min-width: 66px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(39,198,164,.14);
+      color: #7ff0d7;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(127,240,215,.16);
+    }
+
+    .timer-stage {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      padding: 8px 0;
+    }
+
+    .timer-button {
+      width: min(76vw, 430px);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 0;
+      padding: 0;
+      border-radius: 50%;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .timer-button:active {
+      transform: scale(.985);
+    }
+
+    .timer-button svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      filter: drop-shadow(0 22px 42px rgba(0,0,0,.34));
+    }
+
+    .ring-bg {
+      stroke: var(--ring-bg);
+      stroke-width: 10;
+      fill: rgba(255,255,255,.03);
+    }
+
+    .ring {
+      stroke: var(--accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      fill: transparent;
+      transition: stroke .18s linear;
+    }
+
+    .timer-button.warn .ring {
+      stroke: var(--accent-hot);
+    }
+
+    .timer-button.warn {
+      animation: warnPulse .45s linear infinite;
+    }
+
+    @keyframes warnPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.35); }
+    }
+
+    .time-stack {
+      display: grid;
+      place-items: center;
+      gap: 8px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .time {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: clamp(58px, 18vw, 118px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0;
+      color: var(--text);
+      text-shadow: 0 2px 14px rgba(0,0,0,.38);
+    }
+
+    .caption {
+      font-size: clamp(14px, 3.8vw, 18px);
+      font-weight: 900;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .control-btn,
+    .voice-switch {
+      min-height: 48px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
+    }
+
+    .control-btn {
+      cursor: pointer;
+    }
+
+    .control-btn.primary {
+      background: linear-gradient(180deg, rgba(39,198,164,.36), rgba(39,198,164,.18));
+      color: #eafffa;
+    }
+
+    .voice-switch {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .voice-switch input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        grid-template-columns: minmax(260px, 1fr) minmax(220px, 300px);
+        grid-template-rows: auto 1fr;
+        align-items: center;
+      }
+
+      .topbar {
+        grid-column: 1 / -1;
+      }
+
+      .timer-stage {
+        padding: 0;
+      }
+
+      .timer-button {
+        width: min(58vh, 360px);
+      }
+
+      .controls {
+        align-self: center;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .app {
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .title {
+        font-size: 13px;
+      }
+
+      .timer-button {
+        width: min(82vw, 320px);
+      }
+
+      .control-btn,
+      .voice-switch {
+        min-height: 44px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title">困難拉圖斯 60 秒循環倒數</div>
+      <div class="status-pill" id="status">待機</div>
+    </header>
+
+    <section class="timer-stage" aria-label="60 秒循環倒數器">
+      <button class="timer-button" id="timerButton" type="button" aria-label="開始或重新開始 60 秒倒數">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-bg" cx="60" cy="60" r="48"></circle>
+          <circle class="ring" id="ring" cx="60" cy="60" r="48"></circle>
+        </svg>
+        <span class="time-stack">
+          <span class="time" id="time">60.0</span>
+          <span class="caption" id="caption">點擊開始</span>
+        </span>
+      </button>
+    </section>
+
+    <section class="controls" aria-label="控制列">
+      <button class="control-btn primary" id="startPause" type="button">開始</button>
+      <button class="control-btn" id="reset" type="button">重置</button>
+      <label class="voice-switch">
+        <input type="checkbox" id="voice" checked>
+        <span>語音與震動提醒</span>
+      </label>
+    </section>
+  </main>
+
+  <script>
+    const DURATION = 60;
+    const RADIUS = 48;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+    const WARNING_SECONDS = 10;
+
+    const state = {
+      timeLeft: DURATION,
+      interval: null,
+      running: false,
+      voiceUnlocked: false,
+      warningSpoken: false
+    };
+
+    const els = {
+      timerButton: document.getElementById('timerButton'),
+      ring: document.getElementById('ring'),
+      time: document.getElementById('time'),
+      caption: document.getElementById('caption'),
+      status: document.getElementById('status'),
+      startPause: document.getElementById('startPause'),
+      reset: document.getElementById('reset'),
+      voice: document.getElementById('voice')
+    };
+
+    els.ring.style.strokeDasharray = String(CIRCUMFERENCE);
+    els.ring.style.strokeDashoffset = '0';
+    render();
+
+    els.timerButton.addEventListener('click', () => {
+      unlockVoice();
+      resetTimer();
+      startTimer();
+    });
+
+    els.startPause.addEventListener('click', () => {
+      unlockVoice();
+      if (state.running) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    els.reset.addEventListener('click', resetTimer);
+
+    function startTimer() {
+      if (state.interval) clearInterval(state.interval);
+      state.running = true;
+      state.interval = setInterval(tick, 100);
+      render();
+    }
+
+    function pauseTimer() {
+      clearInterval(state.interval);
+      state.interval = null;
+      state.running = false;
+      render();
+    }
+
+    function resetTimer() {
+      clearInterval(state.interval);
+      state.interval = null;
+      state.timeLeft = DURATION;
+      state.running = false;
+      state.warningSpoken = false;
+      render();
+    }
+
+    function tick() {
+      state.timeLeft -= 0.1;
+
+      if (state.timeLeft <= WARNING_SECONDS && !state.warningSpoken) {
+        notify('10 秒');
+        state.warningSpoken = true;
+      }
+
+      if (state.timeLeft <= 0) {
+        notify('60 秒到了');
+        state.timeLeft = DURATION;
+        state.warningSpoken = false;
+      }
+
+      render();
+    }
+
+    function render() {
+      const visibleTime = Math.max(0, state.timeLeft);
+      const progress = Math.max(0, Math.min(1, visibleTime / DURATION));
+
+      els.time.textContent = visibleTime.toFixed(1);
+      els.ring.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - progress));
+      els.timerButton.classList.toggle('warn', state.running && visibleTime <= WARNING_SECONDS);
+      els.caption.textContent = state.running ? '循環倒數中' : '點擊開始';
+      els.status.textContent = state.running ? '運行中' : '待機';
+      els.startPause.textContent = state.running ? '暫停' : '開始';
+    }
+
+    function notify(text) {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      if (!els.voice.checked || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      utterance.rate = 1.15;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function unlockVoice() {
+      if (state.voiceUnlocked || !('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance('');
+      utterance.volume = 0;
+      window.speechSynthesis.speak(utterance);
+      state.voiceUnlocked = true;
+    }
+  </script>
+</body>
+</html>
